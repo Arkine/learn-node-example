@@ -97,3 +97,33 @@ exports.updateStore = async (req, res) => {
 	// Redirect to store page and tell them it worked
 	res.redirect(`/stores/${store._id}/edit`);
 }
+
+exports.getStoreBySlug = async (req, res, next) => {
+	const store = await Store.findOne({ slug: req.params.slug });
+
+	if (!store) {
+		return next();
+	}
+
+	res.render('store', {
+		title: store.name,
+		store
+	})
+}
+
+exports.getStoresByTag = async (req, res) => {
+	const tag= req.params.tag;
+	const tagQuery = tag || { $exists: true };
+
+	const tagsPromise = Store.getTagsList();
+	const storesPromise = Store.find({ tags: tagQuery });
+
+	const [ tags, stores ] = await Promise.all([tagsPromise, storesPromise]);
+
+	res.render('tag', {
+		title: 'Tags',
+		tag,
+		stores,
+		tags
+	});
+}
