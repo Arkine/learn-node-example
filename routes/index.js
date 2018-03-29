@@ -10,6 +10,7 @@ const authController = require('../controllers/AuthController')
 router.get('/', catchErrors(storeController.getStores));
 router.get('/stores', catchErrors(storeController.getStores));
 router.get('/add', authController.isLoggedIn, storeController.addStore);
+router.get('/hearts', authController.isLoggedIn, catchErrors(storeController.getHearts));
 
 router.post('/add',
 	storeController.upload,
