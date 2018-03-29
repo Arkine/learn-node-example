@@ -66,7 +66,7 @@ exports.createStore = async (req, res) => {
 
 exports.getStores = async (req, res) => {
 	// 1. Query all stores
-	const stores = await Store.find();
+	const stores = await Store.find().populate('reviews');
 
 	res.render('stores', {
 		title: 'Stores',
@@ -203,6 +203,15 @@ exports.getHearts = async (req, res) => {
 
 	res.render('stores', {
 		title: 'Hearted Stores',
+		stores
+	});
+};
+
+exports.getTopStores = async (req, res) => {
+	const stores = await Store.getTopStores();
+
+	res.render('topStores', {
+		title: 'Top Stores',
 		stores
 	});
 };

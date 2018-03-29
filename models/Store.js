@@ -73,6 +73,7 @@ storeSchema.pre('save', async function(next) {
 	next();
 });
 
+// Gets list of all tags
 storeSchema.statics.getTagsList = function() {
 	return this.aggregate([
 		{ $unwind: '$tags' },
@@ -81,11 +82,60 @@ storeSchema.statics.getTagsList = function() {
 	]);
 };
 
+// Gets top stores
+storeSchema.statics.getTopStores = function() {
+	return this.aggregate([
+		// Lookup stores and populate reviews
+		{
+			$lookup: {
+				from: 'reviews',
+				localField: '_id',
+				foreignField: 'store',
+				as: 'reviews'
+			}
+		},
+		// Filter for stores w/ 2 or more reviews
+		{
+			$match: {
+				'reviews.1': {
+					$exists: true
+				}
+			}
+		},
+		// Add the average reviews field
+		{
+			$addFields: {
+				averageRating: {
+					$avg: '$reviews.rating'
+				}
+			}
+		},
+		// Sort it by new field, highest reviews first
+		{
+			$sort: {
+				averageRating: -1
+			}
+		},
+		// limit to 10
+		{
+			$limit: 10
+		}
+	]);
+}
+
 // Find reviews where the store's _id property === review's store property
 storeSchema.virtual('reviews', {
 	ref: 'Review', // what model to link
 	localField: '_id', // Which field on the store
 	foreignField: 'store' // Which field on the review
 });
+
+function autoPopulate(next) {
+	this.populate('reviews');
+	next();
+}
+
+storeSchema.pre('find', autoPopulate);
+storeSchema.pre('findOne', autoPopulate);
 
 module.exports = mongoose.model('Store', storeSchema);
