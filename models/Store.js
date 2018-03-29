@@ -63,8 +63,6 @@ storeSchema.pre('save', async function(next) {
 	}
 
 	next();
-
-	// TODO: Make more resilient so slugs are unique
 });
 
 storeSchema.statics.getTagsList = function() {
