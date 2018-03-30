@@ -65,12 +65,31 @@ exports.createStore = async (req, res) => {
 };
 
 exports.getStores = async (req, res) => {
+	const page = req.params.page || 1;
+	const limit = 4;
+	const skip = (page * limit) - limit;
 	// 1. Query all stores
-	const stores = await Store.find().populate('reviews');
+	const storesPromise = Store
+		.find()
+		.skip(skip)
+		.limit(limit)
+		.sort({ created: 'desc' });
+
+	const countPromise = Store.count();
+	const [stores, count] = await Promise.all([storesPromise, countPromise]);
+	const pages = Math.ceil(count / limit);
+
+	if (!stores.length && skip) {
+		req.flash('info', 'That requested page no longer exists');
+		res.redirect(`/stores/page/${pages}`);
+	}
 
 	res.render('stores', {
 		title: 'Stores',
-		stores
+		stores,
+		page,
+		pages,
+		count
 	});
 }
 
